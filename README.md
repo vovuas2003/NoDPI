@@ -1,4 +1,4 @@
-# No DPI [ver. 1.2]
+# No DPI [ver. 1.3]
 Uses simple SSL fragmentation to avoid DPI.
 No system privileges needed.
 
