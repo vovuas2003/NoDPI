@@ -18,7 +18,8 @@ async def pipe(reader, writer):
         try:
             writer.write(await reader.read(1500))
             await writer.drain()
-        except:
+        except Exception as e:
+            print(e)
             break
 
     writer.close()
@@ -31,7 +32,8 @@ async def new_conn(local_reader, local_writer):
     try:
         type, target = http_data.split(b"\r\n")[0].split(b" ")[0:2]
         host, port = target.split(b":")
-    except:
+    except Exception as e:
+        print(e)
         local_writer.close()
         return
 
@@ -44,7 +46,8 @@ async def new_conn(local_reader, local_writer):
 
     try:
         remote_reader, remote_writer = await asyncio.open_connection(host, port)
-    except:
+    except Exception as e:
+        print(e)
         local_writer.close()
         return
 
@@ -57,8 +60,14 @@ async def new_conn(local_reader, local_writer):
 
 async def fragemtn_data(local_reader, remote_writer):
 
-    head = await local_reader.read(5)
-    data = await local_reader.read(1500)
+    try:
+        head = await local_reader.read(5)
+        data = await local_reader.read(1500)
+    except Exception as e:
+        print(e)
+        local_reader.close()
+        return
+
     parts = []
 
     if all(data.find(site) == -1 for site in BLOCKED):
