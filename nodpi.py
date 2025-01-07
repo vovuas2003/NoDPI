@@ -86,5 +86,5 @@ async def fragemtn_data(local_reader, remote_writer):
     remote_writer.write(b''.join(parts))
     await remote_writer.drain()
 
-print('Наслаждайтесь просмотром! Прокси запущен на 127.0.0.1:8881)')
+print('Наслаждайтесь просмотром! Прокси запущен на 127.0.0.1:8881')
 asyncio.run(main(host='127.0.0.1', port=8881))
