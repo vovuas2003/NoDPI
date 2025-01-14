@@ -2,14 +2,6 @@ import random
 import asyncio
 import logging
 
-logging.basicConfig(
-    filename="errors.log",
-    level=logging.ERROR,
-    encoding="utf-8",
-    format="[%(asctime)s][%(levelname)s]: %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-)
-
 
 BLOCKED = [
     line.rstrip().encode() for line in open("blacklist.txt", "r", encoding="utf-8")
