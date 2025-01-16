@@ -153,7 +153,7 @@ if __name__ == "__main__":
     )
     argparser.add_argument(
         "--blacklist",
-        required=True,
+        default="blacklist.txt",
         help="The path to the blacklist file",
     )
     argparser.add_argument(
