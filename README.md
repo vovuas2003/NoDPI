@@ -8,6 +8,8 @@
 # NoDPI
 *Say NO to blocking!*
 
+[![Visitors](https://visitor-badge.laobi.icu/badge?page_id=GVCoder09.NoDPI)]()
+
 This project is a fork of the repository https://github.com/theo0x0/nodpi and is developed independently. Do not confuse with https://github.com/raspabamos/nodpi !
 
 ## Description / Описание
@@ -68,7 +70,7 @@ Your use of this software constitutes your agreement to the terms of this discla
 
 ## Quick start / Быстрый старт
 1) Download the latest version for your OS from [the Releases page](https://github.com/GVCoder09/NoDPI/releases) and unzip it
-2) Go to the directory with the unzipped utility and run it with the command `nodpi.exe --blacklist blacklist.txt` in Windows or `./nodpi --blacklist ./blacklist.txt` in Linux. You can replace the file `blacklist.txt` with your own file
+2) Go to the directory with the unzipped utility and run it with the command `nodpi.exe --blacklist blacklist.txt` in Windows or `./nodpi --blacklist ./blacklist.txt` in Linux. You can replace the file `blacklist.txt` with your own file. **If the blacklist file is not specified, the program will search for the file `blacklist.txt` in the current directory by default.**
 3) In the browser or system settings, set the proxy to 127.0.0.1:8881
 4) In some browsers, you may need to disable kyber
 5) Enjoy!
@@ -80,7 +82,7 @@ Please report any problems and malfunctions to us on [the Issues page](https://g
 <hr>
 
 1) [Скачайте](https://github.com/GVCoder09/NoDPI/releases) последнюю версию утилиты для вашей ОС и разархивруйте ее
-2) Перейдите в каталог с распакованной утилитой и запустите ее командой `nodpi.exe --blacklist blacklist.txt` в Windows или `./nodpi --blacklist ./blacklist.txt` в Linux. Вы можете заменить файл `blacklist.txt` своим файлом
+2) Перейдите в каталог с распакованной утилитой и запустите ее командой `nodpi.exe --blacklist blacklist.txt` в Windows или `./nodpi --blacklist ./blacklist.txt` в Linux. Вы можете заменить файл `blacklist.txt` своим файлом. **Если файл черного списка не указан, то программа по умолчанию будет искать файл `blacklist.txt` в текущей директории.**
 3) В настройках браузера или системы настройте прокси на 127.0.0.1:8881
 4) В некоторых браузерах может потребоваться отключение kyber
 5) Наслаждайтесь!
@@ -91,7 +93,7 @@ Please report any problems and malfunctions to us on [the Issues page](https://g
 
 ## Supported arguments / Поддерживаемые аргументы командной строки
 ```
-usage: nodpi.exe [-h] [--host HOST] [--port PORT] --blacklist BLACKLIST [--log LOG]
+usage: nodpi.exe [-h] [--host HOST] [--port PORT] [--blacklist BLACKLIST] [--log LOG]
 
 options:
   -h, --help            show this help message and exit
