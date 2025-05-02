@@ -124,7 +124,7 @@ class ProxyServer:
                 f"\033[97mTraffic In: \033[96m{self.format_size(self.traffic_in)}\033[0m | "
                 f"\033[97mTraffic Out: \033[96m{self.format_size(self.traffic_out)}\033[0m"
             )
-            print(stats, end='\r', flush=True)
+            print('\u001b[2K'+stats, end='\r', flush=True)
 
     @staticmethod
     def format_size(size):
@@ -319,7 +319,10 @@ class ProxyApplication:
         except asyncio.CancelledError:
             await proxy.shutdown()
             print("\n\n\033[92m[INFO]:\033[97m Shutting down proxy...")
-            sys.exit(0)
+            try:
+                sys.exit(0)
+            except asyncio.CancelledError:
+                pass
 
 
 if __name__ == "__main__":
