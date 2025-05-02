@@ -3,7 +3,9 @@ import asyncio
 import random
 import logging
 import os
+import sys
 
+__version__ = '1.5'
 
 BLOCKED = []
 TASKS = []
@@ -21,10 +23,16 @@ async def main(host, port, blacklist, log):
         datefmt="%Y-%m-%d %H:%M:%S",
     )
 
+    os.system('')
+
+    if not os.path.exists(blacklist):
+        print(f"\033[91m[Error]: File {blacklist} not found\033[0m")
+        logging.error('File %s not found', blacklist)
+        sys.exit(1)
+
     BLOCKED = [line.rstrip().encode()
                for line in open(blacklist, "r", encoding="utf-8")]
 
-    os.system('')
     print('''
 \033[92m`7MN.   `7MF'          `7MM"""Yb.   `7MM"""Mq. `7MMF'
   MMN.    M              MM    `Yb.   MM   `MM.  MM
@@ -171,4 +179,4 @@ if __name__ == "__main__":
             log=args.log))
     except KeyboardInterrupt:
         print('\n\033[92m[INFO]:\033[97m Shutting down proxy...')
-        exit(0)
+        sys.exit(0)
