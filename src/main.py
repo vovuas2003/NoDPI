@@ -163,8 +163,12 @@ if __name__ == "__main__":
     )
     args = argparser.parse_args()
 
-    asyncio.run(main(
-        host=args.host,
-        port=args.port,
-        blacklist=args.blacklist,
-        log=args.log))
+    try:
+        asyncio.run(main(
+            host=args.host,
+            port=args.port,
+            blacklist=args.blacklist,
+            log=args.log))
+    except KeyboardInterrupt:
+        print('\n\033[92m[INFO]:\033[97m Shutting down proxy...')
+        exit(0)
