@@ -93,15 +93,16 @@ Please report any problems and malfunctions to us on [the Issues page](https://g
 
 ## Supported arguments / Поддерживаемые аргументы командной строки
 ```
-usage: nodpi.exe [-h] [--host HOST] [--port PORT] [--blacklist BLACKLIST] [--log LOG]
+usage: nodpi.exe [-h] [--host HOST] [--port PORT] [--blacklist BLACKLIST] [--log LOG] [-v]
 
 options:
   -h, --help            show this help message and exit
-  --host HOST           The host to run the proxy on
-  --port PORT           The port to run the proxy on
+  --host HOST           Proxy host
+  --port PORT           Proxy port
   --blacklist BLACKLIST
-                        The path to the blacklist file
-  --log LOG             The path to the log file
+                        Path to blacklist file
+  --log LOG             Path to log file
+  -v, --verbose         Show more info
 
 ```
 ## Run from source code / Запуск из исходного кода
