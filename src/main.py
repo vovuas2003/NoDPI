@@ -6,6 +6,7 @@ import random
 import logging
 import os
 import sys
+from datetime import datetime
 
 __version__ = "1.6"
 
@@ -21,6 +22,12 @@ class ProxyServer:
         self.blacklist = blacklist
         self.log_file = log
         self.verbose = verbose
+
+        self.total_connections = 0
+        self.allowed_connections = 0
+        self.blocked_connections = 0
+        self.traffic_in = 0
+        self.traffic_out = 0
 
         self.blocked = []
         self.tasks = []
@@ -68,6 +75,7 @@ class ProxyServer:
         method.
         """
         self.print_banner()
+        asyncio.create_task(self.display_stats())
         self.server = await asyncio.start_server(
             self.handle_connection, self.host, self.port
         )
@@ -88,14 +96,47 @@ class ProxyServer:
 .JML.    YM   `Ybmd9'  .JMMmmmdP'   .JMML.     .JMML.\033[0m
         '''
         )
+        print(f"\033[92mVersion: {__version__}".center(50))
         print("\033[97m"+"Enjoy watching! / Наслаждайтесь просмотром!".center(50))
         print(f"Proxy is running on {self.host}:{self.port}".center(50))
         print("\n")
+        print(
+            f"\033[92m[INFO]:\033[97m Proxy started at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        print(
+            f"\033[92m[INFO]:\033[97m Blacklist contains {len(self.blocked)} domains")
         print(
             "\033[92m[INFO]:\033[97m To stop the proxy, press Ctrl+C twice")
         print(
             "\033[92m[INFO]:\033[97m Logging is in progress. You can see the list of errors in the file "
             f"{self.log_file}")
+
+    async def display_stats(self):
+        """
+        Display the current statistics of the proxy server.
+        """
+        while True:
+            await asyncio.sleep(1)
+            stats = (
+                f"\033[92m[STATS]:\033[0m "
+                f"\033[97mConnections: \033[93m{self.total_connections}\033[0m | "
+                f"\033[97mMissing: \033[92m{self.allowed_connections}\033[0m | "
+                f"\033[97mUnblocked: \033[91m{self.blocked_connections}\033[0m | "
+                f"\033[97mTraffic In: \033[96m{self.format_size(self.traffic_in)}\033[0m | "
+                f"\033[97mTraffic Out: \033[96m{self.format_size(self.traffic_out)}\033[0m"
+            )
+            print(stats, end='\r', flush=True)
+
+    @staticmethod
+    def format_size(size):
+        """
+        Convert a size in bytes to a human-readable string with appropriate units.
+        """
+        units = ['B', 'KB', 'MB', 'GB']
+        unit = 0
+        while size >= 1024 and unit < len(units)-1:
+            size /= 1024
+            unit += 1
+        return f"{size:.2f} {units[unit]}"
 
     async def handle_connection(self, reader, writer):
         """
@@ -106,6 +147,7 @@ class ProxyServer:
         request. If the request is valid, it opens a connection to the target
         server and starts piping data between the client and the target server.
         """
+        self.total_connections += 1
         http_data = await reader.read(1500)
         if not http_data:
             writer.close()
@@ -147,14 +189,13 @@ class ProxyServer:
         self.tasks.extend(
             [
                 asyncio.create_task(
-                    self.pipe(reader, remote_writer, self.verbose)),
+                    self.pipe(reader, remote_writer, 'out')),
                 asyncio.create_task(
-                    self.pipe(remote_reader, writer, self.verbose)),
+                    self.pipe(remote_reader, writer, 'in')),
             ]
         )
 
-    @staticmethod
-    async def pipe(reader, writer, verbose):
+    async def pipe(self, reader, writer, direction):
         """
         Pipe data from a reader to a writer.
 
@@ -170,11 +211,15 @@ class ProxyServer:
         try:
             while not reader.at_eof() and not writer.is_closing():
                 data = await reader.read(1500)
+                if direction == 'out':
+                    self.traffic_out += len(data)
+                else:
+                    self.traffic_in += len(data)
                 writer.write(data)
                 await writer.drain()
         except Exception as e:
             logging.error(e)
-            if verbose:
+            if self.verbose:
                 print(f"\033[93m[NON-CRITICAL]:\033[97m {e}\033[0m")
         finally:
             writer.close()
@@ -202,9 +247,12 @@ class ProxyServer:
             return
 
         if all(site not in data for site in self.blocked):
+            self.allowed_connections += 1
             writer.write(head + data)
             await writer.drain()
             return
+
+        self.blocked_connections += 1
 
         parts = []
         host_end = data.find(b"\x00")
@@ -270,7 +318,7 @@ class ProxyApplication:
             await proxy.run()
         except asyncio.CancelledError:
             await proxy.shutdown()
-            print("\n\033[92m[INFO]:\033[97m Shutting down proxy...")
+            print("\n\n\033[92m[INFO]:\033[97m Shutting down proxy...")
             sys.exit(0)
 
 
