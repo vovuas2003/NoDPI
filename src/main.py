@@ -7,6 +7,7 @@ import logging
 import os
 import sys
 from datetime import datetime
+import time
 
 __version__ = "1.6"
 
@@ -28,6 +29,11 @@ class ProxyServer:
         self.blocked_connections = 0
         self.traffic_in = 0
         self.traffic_out = 0
+        self.last_traffic_in = 0
+        self.last_traffic_out = 0
+        self.speed_in = 0
+        self.speed_out = 0
+        self.last_time = None
 
         self.blocked = []
         self.tasks = []
@@ -116,13 +122,28 @@ class ProxyServer:
         """
         while True:
             await asyncio.sleep(1)
+            current_time = time.time()
+
+            if self.last_time is not None:
+                time_diff = current_time - self.last_time
+                self.speed_in = (self.traffic_in -
+                                 self.last_traffic_in) * 8 / time_diff
+                self.speed_out = (self.traffic_out -
+                                  self.last_traffic_out) * 8 / time_diff
+
+            self.last_traffic_in = self.traffic_in
+            self.last_traffic_out = self.traffic_out
+            self.last_time = current_time
+
             stats = (
                 f"\033[92m[STATS]:\033[0m "
-                f"\033[97mConnections: \033[93m{self.total_connections}\033[0m | "
-                f"\033[97mMissing: \033[92m{self.allowed_connections}\033[0m | "
-                f"\033[97mUnblocked: \033[91m{self.blocked_connections}\033[0m | "
-                f"\033[97mTraffic In: \033[96m{self.format_size(self.traffic_in)}\033[0m | "
-                f"\033[97mTraffic Out: \033[96m{self.format_size(self.traffic_out)}\033[0m"
+                f"\033[97mConns: \033[93m{self.total_connections}\033[0m | "
+                f"\033[97mMiss: \033[92m{self.allowed_connections}\033[0m | "
+                f"\033[97mUnblock: \033[91m{self.blocked_connections}\033[0m | "
+                f"\033[97mDL: \033[96m{self.format_size(self.traffic_in)}\033[0m | "
+                f"\033[97mUL: \033[96m{self.format_size(self.traffic_out)}\033[0m | "
+                f"\033[97mSpeed DL: \033[96m{self.format_speed(self.speed_in)}\033[0m | "
+                f"\033[97mSpeed UL: \033[96m{self.format_speed(self.speed_out)}\033[0m"
             )
             print('\u001b[2K'+stats, end='\r', flush=True)
 
@@ -136,7 +157,17 @@ class ProxyServer:
         while size >= 1024 and unit < len(units)-1:
             size /= 1024
             unit += 1
-        return f"{size:.2f} {units[unit]}"
+        return f"{size:.1f} {units[unit]}"
+
+    @staticmethod
+    def format_speed(speed_bps):
+        units = ['bps', 'Kbps', 'Mbps', 'Gbps']
+        unit = 0
+        speed = speed_bps
+        while speed >= 1000 and unit < len(units)-1:
+            speed /= 1000
+            unit += 1
+        return f"{speed:.1f} {units[unit]}"
 
     async def handle_connection(self, reader, writer):
         """
@@ -147,7 +178,7 @@ class ProxyServer:
         request. If the request is valid, it opens a connection to the target
         server and starts piping data between the client and the target server.
         """
-        self.total_connections += 1
+
         http_data = await reader.read(1500)
         if not http_data:
             writer.close()
@@ -169,6 +200,7 @@ class ProxyServer:
             writer.close()
             return
 
+        self.total_connections += 1
         writer.write(b"HTTP/1.1 200 OK\n\n")
         await writer.drain()
 
