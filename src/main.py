@@ -52,7 +52,7 @@ class ProxyServer:
         %Y-%m-%d %H:%M:%S.
         """
         logging.basicConfig(
-            filename=self.log_file,
+            filename=self.log_file if self.log_file else None,
             level=logging.ERROR,
             encoding="utf-8",
             format="[%(asctime)s][%(levelname)s]: %(message)s",
@@ -112,9 +112,10 @@ class ProxyServer:
             f"\033[92m[INFO]:\033[97m Blacklist contains {len(self.blocked)} domains")
         print(
             "\033[92m[INFO]:\033[97m To stop the proxy, press Ctrl+C twice")
-        print(
-            "\033[92m[INFO]:\033[97m Logging is in progress. You can see the list of errors in the file "
-            f"{self.log_file}")
+        if self.log_file:
+            print(
+                "\033[92m[INFO]:\033[97m Logging is in progress. You can see the list of errors in the file "
+                f"{self.log_file}")
 
     async def display_stats(self):
         """
@@ -290,8 +291,7 @@ class ProxyServer:
         host_end = data.find(b"\x00")
         if host_end != -1:
             parts.append(
-                bytes.fromhex("1603")
-                + bytes([random.randint(0, 255)])
+                bytes.fromhex("160304")
                 + (host_end + 1).to_bytes(2, "big")
                 + data[: host_end + 1]
             )
@@ -300,8 +300,7 @@ class ProxyServer:
         while data:
             chunk_len = random.randint(1, len(data))
             parts.append(
-                bytes.fromhex("1603")
-                + bytes([random.randint(0, 255)])
+                bytes.fromhex("160304")
                 + chunk_len.to_bytes(2, "big")
                 + data[:chunk_len]
             )
@@ -334,7 +333,7 @@ class ProxyApplication:
         parser.add_argument(
             "--blacklist", default="blacklist.txt", help="Path to blacklist file"
         )
-        parser.add_argument("--log", default="errors.log",
+        parser.add_argument("--log", required=False,
                             help="Path to log file")
         parser.add_argument('-v', '--verbose', action='store_true',
                             help='Show more info')
