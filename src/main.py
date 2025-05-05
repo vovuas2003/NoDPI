@@ -58,6 +58,8 @@ class ProxyServer:
             format="[%(asctime)s][%(levelname)s]: %(message)s",
             datefmt="%Y-%m-%d %H:%M:%S",
         )
+        if not self.log_file:
+            logging.disable()
 
     def load_blacklist(self):
         """
