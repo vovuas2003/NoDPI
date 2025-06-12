@@ -7,6 +7,8 @@ DEFAULT_PORT = 8080
 
 BLOCKED = []
 TASKS = []
+TASKS_CLEANUP_LOCK = asyncio.Lock()
+TASKS_CLEANUP_TIMEOUT_SECONDS = 60 * 5 # cleanup period = 5 min
 
 def main():
     global BLOCKED
@@ -57,7 +59,17 @@ def main():
 
 async def almost_main(host, port):
     server = await asyncio.start_server(new_conn, host, port)
+    asyncio.create_task(cleanup_tasks())
     await server.serve_forever()
+
+async def cleanup_tasks():
+    global TASKS
+    while True:
+        await asyncio.sleep(TASKS_CLEANUP_TIMEOUT_SECONDS)
+        async with TASKS_CLEANUP_LOCK:
+            #print("Before cleanup: tasks len = ", len(TASKS), " sizeof (bytes) = ", sys.getsizeof(TASKS)) # cleanup debug
+            TASKS = [t for t in TASKS if not t.done()]
+            #print("After cleanup: tasks len = ", len(TASKS), " sizeof (bytes) = ", sys.getsizeof(TASKS)) # cleanup debug
 
 async def pipe(reader, writer):
     while not reader.at_eof() and not writer.is_closing():
@@ -93,6 +105,7 @@ async def new_conn(local_reader, local_writer):
         await fragment_data(local_reader, remote_writer)
     TASKS.append(asyncio.create_task(pipe(local_reader, remote_writer)))
     TASKS.append(asyncio.create_task(pipe(remote_reader, local_writer)))
+    #print("New conn, tasks len = ", len(TASKS), " sizeof (bytes) = ", sys.getsizeof(TASKS)) # cleanup debug
 
 async def fragment_data(local_reader, remote_writer):
     try:
@@ -109,11 +122,11 @@ async def fragment_data(local_reader, remote_writer):
             return
     host_end_index = data.find(b"\x00")
     if host_end_index != -1:
-        parts.append(bytes.fromhex("1603") + bytes([random.randint(0, 255)]) + int(host_end_index + 1).to_bytes(2, byteorder="big") + data[: host_end_index + 1])
+        parts.append(bytes.fromhex("160304") + int(host_end_index + 1).to_bytes(2, byteorder="big") + data[: host_end_index + 1])
         data = data[host_end_index + 1:]
     while data:
         part_len = random.randint(1, len(data))
-        parts.append(bytes.fromhex("1603") + bytes([random.randint(0, 255)]) + int(part_len).to_bytes(2, byteorder="big") + data[0:part_len])
+        parts.append(bytes.fromhex("160304") + int(part_len).to_bytes(2, byteorder="big") + data[0:part_len])
         data = data[part_len:]
     remote_writer.write(b"".join(parts))
     await remote_writer.drain()
